@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 
-export default async function Submission({params} : {params: {id: string}}) {
+export default async function Submission({params} : {params: {row: string}}) {
 
     const auth = await google.auth.getClient({
         scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -8,8 +8,8 @@ export default async function Submission({params} : {params: {id: string}}) {
 
     const sheets = google.sheets({version: 'v4', auth});
 
-    const id = parseInt(params.id) + 1; // +1 is because the first row is the header
-    const range = `A${id}:C${id}`; //FIXME: this is hardcoded for now, needs to be dynamic to any amount of voters
+    const row = parseInt(params.row) + 1; // +1 is because the first row is the header
+    const range = `A${row}:C${row}`; //FIXME: this is hardcoded for now, needs to be dynamic to any amount of voters
 
     const response = await sheets.spreadsheets.values.get({
         spreadsheetId: process.env.SHEET_ID,
