@@ -9,7 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "googleapis": "^129.0.0",
+    "@google-cloud/local-auth": "^2.1.0",
+    "googleapis": "^105.0.0",
     "next": "14.0.4",
     "react": "^18",
     "react-dom": "^18"
