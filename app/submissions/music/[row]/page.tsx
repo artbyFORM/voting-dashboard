@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 
-export default async function Submission({params} : {params: {row: string}}) {
+export default async function MusicSubmission({params} : {params: {row: string}}) {
 
     const auth = await google.auth.getClient({
         scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
