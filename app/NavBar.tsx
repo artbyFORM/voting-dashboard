@@ -1,13 +1,20 @@
+'use client';
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation';
 import React from 'react'
 import { FaGlobe } from "react-icons/fa"; // placeholder
-
+import classnames from 'classnames';
 
 const NavBar = () => {
+
+  const currentPath = usePathname();
+  console.log(currentPath);
+
   const links = [
         { label: 'Dashboard', href: '/' },
-        { label: 'Overview', href: '/' },
-        { label: 'Settings', href: '/' },
+        { label: 'Vote', href: '/submissions/music/1' },
+        { label: 'Settings', href: '/settings' },
   ]
   return (
     <nav className='flex space-x-6 border-b mb-5 px-5 h-14 items-center'>
@@ -16,7 +23,11 @@ const NavBar = () => {
             {links.map((link) => 
                 <Link 
                 key={link.href} 
-                className="text-zinc-100 hover:text-zinc-400 transition-colors" 
+                className={classnames({
+                  'text-zinc-100': link.href === currentPath,
+                  'text-zinc-500': link.href !== currentPath,
+                  'hover:text-zinc-500 transition-colors': true
+                })} 
                 href={link.href}>{link.label}</Link>)}
         </ul>
     </nav>
