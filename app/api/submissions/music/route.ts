@@ -9,8 +9,8 @@ export async function GET(req:any){
     const sheets = google.sheets({version: 'v4', auth});
 
     const parsedRow = parseInt(row!) + 1; // +1 is because the first row is the header
-    const infoRange = `A${parsedRow}:B${parsedRow}`;
-    const voteRange = `C${parsedRow}:E${parsedRow}`; //FIXME: hardcoded, needs to calculate for arbitrary number of voters
+    const infoRange = `A${parsedRow}:E${parsedRow}`;
+    const voteRange = `G${parsedRow}:P${parsedRow}`; //FIXME: hardcoded, needs to calculate for arbitrary number of voters
 
     const infoResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: process.env.SHEET_ID,
@@ -24,16 +24,15 @@ export async function GET(req:any){
 
     console.log(infoResponse.data);
 
-    const [title, artist] = infoResponse.data.values?.[0] ?? [];
+    const [id, title, artists, listenLink, fullInfoLink] = infoResponse.data.values?.[0] ?? [];
     const votes = voterResponse.data.values ?? [];
 
-    const data = { title, artist, votes };
+    const data = { id, artists, title, listenLink, fullInfoLink, votes };
     return NextResponse.json(data);
 }
 
 export async function POST(req: any, res: any){
     const data  = await req.json();
-    console.log(data);
     const row = parseInt(data.row) + 1;
     const vote = data.vote;
 
@@ -52,7 +51,7 @@ export async function POST(req: any, res: any){
         const sheets = google.sheets({version: 'v4', auth});
         const response = await sheets.spreadsheets.values.update({
             spreadsheetId: process.env.SHEET_ID,
-            range: `C${row}`,
+            range: `G${row}`,
             valueInputOption: 'USER_ENTERED',
             requestBody: {
                 values: [
