@@ -1,8 +1,9 @@
 import React from 'react'
+import Link from 'next/link'
 
 const SettingsPage = () => {
   return (
-    <div>SettingsPage</div>
+    <Link href="/api/auth/signin">Sign In</Link>
   )
 }
 

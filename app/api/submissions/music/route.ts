@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 export async function GET(req:any){
     const url = new URL(req.url);
     const row = url.searchParams.get('row');
+    //validate search params, account for "all"
 
     const auth = await google.auth.getClient({scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']});
     const sheets = google.sheets({version: 'v4', auth});
@@ -33,8 +34,10 @@ export async function GET(req:any){
 
 export async function POST(req: any, res: any){
     const data  = await req.json();
+    
     const row = parseInt(data.row) + 1;
     const vote = data.vote;
+    const column = data.col;
 
     try {
         const auth = await google.auth.getClient({
@@ -51,7 +54,7 @@ export async function POST(req: any, res: any){
         const sheets = google.sheets({version: 'v4', auth});
         const response = await sheets.spreadsheets.values.update({
             spreadsheetId: process.env.SHEET_ID,
-            range: `G${row}`,
+            range: `${column}${row}`,
             valueInputOption: 'USER_ENTERED',
             requestBody: {
                 values: [

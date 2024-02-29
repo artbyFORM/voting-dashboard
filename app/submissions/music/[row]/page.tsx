@@ -1,9 +1,15 @@
 "use client";
 import { useEffect, useState } from 'react';
 import VoteForm from './voteForm';
+import Link from 'next/link';
 
 export default function Submission({ params }: { params: { row: string } }) {
+
+    const [row, setRow] = useState(params.row);
+    const [reload, setReload] = useState(true);
+
     const [data, setData] = useState<any>(null);
+    const [vote, setVote] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -28,25 +34,48 @@ export default function Submission({ params }: { params: { row: string } }) {
         return () => {
             clearInterval(intervalId); // Clean up the interval on component unmount
         };
-    }, [params.row]);
+    }, [params.row, reload, row]);
 
-    if (!data) {
-        return <div>Loading...</div>;
-    }
+    const handleSubmit = async (vote:string) => {
+        const body = {
+            vote,
+            col: 'G',
+            row: params.row
+        }
 
-    const { title, artists, votes } = data;
+        const response = fetch('/api/submissions/music', {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        setVote(vote);
+        setReload(!reload);
+    };
 
     return (
         <div className="flex min-h-screen flex-col items-center space-y-5 p-15">
+            <div className="grid grid-cols-2 gap-5">
+            <Link className="btn btn-primary" href={`/submissions/music/${parseInt(row) - 1}`}>BACK</Link>
+            <Link className="btn btn-primary" href={`/submissions/music/${parseInt(row) + 1}`}>NEXT</Link>
+            </div>
             <h1 className="text-lg font-bold">Title</h1>
-            <h1>{title}</h1>
+            {data ? <h1>{data.title}</h1> : "..."}
             <h1 className="text-lg font-bold">Artist</h1>
-            <h1>{artists}</h1>
+            {data ? <h1>{data.artists}</h1> : "..."}
             <h1 className="text-lg font-bold">Votes:</h1>
-            {votes.map((vote: any, index: number) => (
+            {data ? data.votes.map((vote: any, index: number) => (
                 <p key={index}>{vote + '\n'}</p>
-            ))}
-            <VoteForm row={params.row} />
+            )): "..."}
+
+            <div className="flex-row">
+                <button className={`btn  px-5 ${vote === '1' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('1')}>1</button>
+                <button className={`btn px-5 ${vote === '2' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('2')}>2</button>
+                <button className={`btn px-5 ${vote === '3' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('3')}>3</button>
+            </div>
         </div>
     );
 }

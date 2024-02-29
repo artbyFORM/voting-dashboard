@@ -1,16 +1,14 @@
 "use client";
 import React, { useState } from 'react';
-//import updateSubmissionData from '@/app/api/submissions/music/updateMusicSubmissionData';
 
 const VoteForm = (props:any) => {
     const [vote, setVote] = useState('');
 
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
+    const handleSubmit = async (vote:string) => {
 
         const body = {
             vote,
-            col: 2,
+            col: props.col,
             row: props.row
         }
 
@@ -25,17 +23,11 @@ const VoteForm = (props:any) => {
     };
 
     return (
-        <div>
-            <form onSubmit={handleSubmit} className='flex min-h-screen flex-col items-center space-y-5 p-15'>
-                 <p>Submit your vote:</p>
-                 <input
-                    type="text"
-                    value={vote}
-                    onChange={(event) => setVote(event.target.value)}
-                />
-                <button type="submit">Submit</button>
-            </form>
-        </div>
+                <div className="flex-row">
+                    <button className='btn btn-primary px-5' style={{ marginRight: '10pt' }} onClick={() => handleSubmit('1')}>1</button>
+                    <button className='btn btn-primary px-5' style={{ marginRight: '10pt' }} onClick={() => handleSubmit('2')}>2</button>
+                    <button className='btn btn-primary px-5' style={{ marginRight: '10pt' }} onClick={() => handleSubmit('3')}>3</button>
+                </div>
     );
 };
 
