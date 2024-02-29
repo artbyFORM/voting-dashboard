@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from 'react';
-import VoteForm from './voteForm';
 import Link from 'next/link';
 
 export default function Submission({ params }: { params: { row: string } }) {
