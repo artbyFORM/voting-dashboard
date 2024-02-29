@@ -57,25 +57,22 @@ export default function Submission({ params }: { params: { row: string } }) {
     };
 
     return (
-        <div className="flex min-h-screen flex-col items-center space-y-5 p-15">
-            <div className="grid grid-cols-2 gap-5">
+        <div className="flex justify-between items-center p-15 w-full h-full">
             <Link className="btn btn-primary" href={`/submissions/music/${parseInt(row) - 1}`}>BACK</Link>
-            <Link className="btn btn-primary" href={`/submissions/music/${parseInt(row) + 1}`}>NEXT</Link>
-            </div>
-            <h1 className="text-lg font-bold">Title</h1>
-            {data ? <h1>{data.title}</h1> : "..."}
-            <h1 className="text-lg font-bold">Artist</h1>
-            {data ? <h1>{data.artists}</h1> : "..."}
-            <h1 className="text-lg font-bold">Votes:</h1>
-            {data ? data.votes.map((vote: any, index: number) => (
-                <p key={index}>{vote + '\n'}</p>
-            )): "..."}
+            <div className="flex flex-col items-center p-15 space-y-15">
+                {data ? <h1 className="text-xl font-extrabold">{data.title}</h1> : "..."}
+                {data ? <h1 className="text-xl font-extrabold">{data.artists}</h1> : "..."}
+                {/*data ? data.votes.map((vote: any, index: number) => (
+                    <p key={index}>{vote + '\n'}</p>
+                )): "..."*/}
 
-            <div className="flex-row">
-                <button className={`btn  px-5 ${vote === '1' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('1')}>1</button>
-                <button className={`btn px-5 ${vote === '2' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('2')}>2</button>
-                <button className={`btn px-5 ${vote === '3' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('3')}>3</button>
+                <div className="flex">
+                    <button className={`btn px-5 ${vote === '1' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('1')}>1</button>
+                    <button className={`btn px-5 ${vote === '2' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('2')}>2</button>
+                    <button className={`btn px-5 ${vote === '3' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('3')}>3</button>
+                </div>
             </div>
+            <Link className="btn btn-primary" href={`/submissions/music/${parseInt(row) + 1}`}>NEXT</Link>
         </div>
     );
 }
