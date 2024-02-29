@@ -6,7 +6,6 @@ export default function Submission({ params }: { params: { row: string } }) {
 
     const [row, setRow] = useState(params.row);
     const [reload, setReload] = useState(true);
-
     const [data, setData] = useState<any>(null);
     const [vote, setVote] = useState('');
 
@@ -52,26 +51,24 @@ export default function Submission({ params }: { params: { row: string } }) {
         });
 
         setVote(vote);
-        setReload(!reload);
+        //setReload(!reload);
     };
 
     return (
         <div className="flex justify-between items-center p-15 w-full h-full">
-            <Link className="btn btn-primary" href={`/submissions/music/${parseInt(row) - 1}`}>BACK</Link>
+            <Link className="btn" href={`/submissions/music/${parseInt(row) - 1}`}>BACK</Link>
             <div className="flex flex-col items-center p-15 space-y-15">
-                {data ? <h1 className="text-xl font-extrabold">{data.title}</h1> : "..."}
-                {data ? <h1 className="text-xl font-extrabold">{data.artists}</h1> : "..."}
-                {/*data ? data.votes.map((vote: any, index: number) => (
-                    <p key={index}>{vote + '\n'}</p>
-                )): "..."*/}
+                {data ? <h1 className="text-4xl font-extrabold pb-5">{data.title}</h1> : "..."}
+                {data ? <h1 className="text-4xl font-light pb-5">{data.artists}</h1> : "..."}
+                {/*data ? data.votes.map((vote: any, index: number) => (<p key={index}>{vote + '\n'}</p>)): "..."*/}
 
                 <div className="flex">
-                    <button className={`btn px-5 ${vote === '1' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('1')}>1</button>
-                    <button className={`btn px-5 ${vote === '2' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('2')}>2</button>
-                    <button className={`btn px-5 ${vote === '3' ? 'btn-primary' : 'btn-red'}`} style={{ marginRight: '10pt' }} onClick={() => handleSubmit('3')}>3</button>
+                    <button className={`btn text-4xl size-24 px-5 mr-10 ${vote === '1' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('1')}>1</button>
+                    <button className={`btn text-4xl size-24 px-5 mr-10 ${vote === '2' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('2')}>2</button>
+                    <button className={`btn text-4xl size-24 px-5 mr-10 ${vote === '3' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('3')}>3</button>
                 </div>
             </div>
-            <Link className="btn btn-primary" href={`/submissions/music/${parseInt(row) + 1}`}>NEXT</Link>
+            <Link className="btn" href={`/submissions/music/${parseInt(row) + 1}`}>NEXT</Link>
         </div>
     );
 }
