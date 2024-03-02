@@ -24,14 +24,22 @@ export default function Submission({ params }: { params: { row: string } }) {
             const jsonData = await response.json();
             setData(jsonData);
         };
-
-        fetchData();
-
-        const intervalId = setInterval(fetchData, 60000); // FIXME: Should I do this a different way? 
-
-        return () => {
-            clearInterval(intervalId); // Clean up the interval on component unmount
+        const fetchVote = async () => {
+            const response = await fetch(
+                `http://localhost:3000/api/submissions/music/getVote?row=${params.row}&col=G`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            const vote = await response.json();
+            setVote(vote);
         };
+        fetchData();
+        fetchVote();
     }, [params.row, reload, row]);
 
     const handleSubmit = async (vote:string) => {
