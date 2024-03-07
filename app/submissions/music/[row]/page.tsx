@@ -48,16 +48,14 @@ export default function Submission({ params }: { params: { row: string } }) {
     }, []);
 
     const changeRow = (newRow:number) => {
-        if(newRow < 1) {
-            return;
-        }
+        if(newRow < 1) { return; }
         setRow(newRow);
         setVote(rows[newRow - 1].votes[col])
     };
 
     async function addRow(row: any, index: number) {
+        const newData = row;
         try {
-          const newData = row;
           await db.rows.add({
             ...newData,
             row: index + 1,
@@ -66,7 +64,6 @@ export default function Submission({ params }: { params: { row: string } }) {
         } catch (error) {
           //console.log(`Row already exists in the database. Attempting update...`);
           try {
-            const newData = row;
             await db.rows.update(newData.id,{
                 ...newData,
             });
@@ -97,27 +94,47 @@ export default function Submission({ params }: { params: { row: string } }) {
           }
     }
 
-    const handleSubmit = async (vote:string) => {
-        setVote(vote); //careful, this only reflects value in UI, not in the db (yet)
-
+    const handleSubmit = async (vote: string) => {
+        // Create a new AbortController instance for each submit
+        const abortController = new AbortController();
+        const signal = abortController.signal;
+    
         const body = {
             vote,
             col: colLetter,
-            row: `${row}`
-        }
-        const response = await fetch('/api/submissions/music', {
-            method: 'POST',
-            body: JSON.stringify(body),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+            row: `${row}`,
+        };
+    
+        try {
+            const response = await fetch('/api/submissions/music', {
+                method: 'POST',
+                body: JSON.stringify(body),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                signal, // Associate the AbortController signal with the fetch request
+            });
+    
+            if (response.status === 200) {
+                // Update the vote in the local database
+                await updateVote(vote, `${rows[row - 1].id}`);
+                
             }
-        });
-
-        if(response.status === 200) {
-            updateVote(vote, `${rows[row - 1].id}`);
+        } catch (error) {
+            // Check if the error is due to the fetch being aborted
+            if (error.name === 'AbortError') {
+                console.log('Fetch aborted:');
+            } else {
+                console.log(`Failed to update vote for ${row}: ${error}`);
+            }
+        } finally {
+            // Clean up the AbortController after the fetch is completed or aborted
+            abortController.abort();
+            setVote(vote);
         }
     };
+    
 
     if(loading) {
         return <div>Loading rows...</div>;
@@ -135,7 +152,7 @@ export default function Submission({ params }: { params: { row: string } }) {
                 <div className="flex flex-col items-center p-15 space-y-15">
                     {rows ? <h1 className="text-4xl font-extrabold pb-5">{rows![row - 1].title}</h1> : "..."}
                     {rows ? <h1 className="text-4xl font-light pb-5">{rows![row - 1].artists}</h1> : "..."}
-                    {rows ? rows![row - 1].votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."}
+                    {/*rows ? rows![row - 1].votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."*/}
 
                     <div className="flex">
                         <button className={`btn text-4xl size-24 px-5 mr-10 ${vote === '1' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('1')}>1</button>
