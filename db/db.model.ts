@@ -3,6 +3,7 @@ import Dexie, { Table } from 'dexie';
 // table interface
 export interface VoteRow {
   id: number;
+  row: number;
   title: string;
   artists: string;
   listenLink: string;
@@ -16,7 +17,7 @@ export class DB extends Dexie {
   constructor() {
     super('myDatabase');
     this.version(1).stores({
-      rows: '++id, title, artists, listenLink, infoLink, votes'  
+      rows: '++id, row, title, artists, listenLink, infoLink, votes'  
     });
   }
 }

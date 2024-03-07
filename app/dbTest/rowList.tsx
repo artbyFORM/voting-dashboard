@@ -7,11 +7,17 @@ export function RowList() {
   
     return (
       <ul>
-        {rows?.map((row: VoteRow) => (
-            <li key={row.id}>
-                {row.id}, {row.title}, {row.artists}, {row.votes && row.votes.join(' ')}
-            </li>
-        ))}
+        {rows?.sort(function(a, b) 
+            {
+            var x = a["row"]; var y = b["row"];
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+            })
+            .map((row: VoteRow) => (
+                <li key={row.row}>
+                    {row.row}, {row.id}, {row.title}, {row.artists}, {row.votes && row.votes.join(' ')}
+                </li>
+            ))
+        }
       </ul>
     );
 }

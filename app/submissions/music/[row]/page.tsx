@@ -5,15 +5,23 @@ import { useLiveQuery } from 'dexie-react-hooks';
 
 export default function Submission({ params }: { params: { row: string } }) {
 
-    const rows = useLiveQuery(() => db.rows.toArray());
+    const rowsQuery = useLiveQuery(() => db.rows.toArray());
 
     const [row, setRow] = useState<number>(parseInt(params.row));
+    const [rows, setRows] = useState<any>([]); //rows should always reflect the local dexie db
+
     const [data, setData] = useState<any>(null);
     const [vote, setVote] = useState('');
 
+    //this sucks but it works
+    useEffect(() => {
+        if (rowsQuery)
+            setRows(rowsQuery.sort(function(a, b){ var x = a["row"]; var y = b["row"]; return ((x < y) ? -1 : ((x > y) ? 1 : 0));}));
+    }, [rowsQuery]);
+
     //fetch data only on mount
     useEffect(() => {
-        db.rows.clear();
+        //db.rows.clear();
         //fetch entire sheet on mount
         const fetchData = async () => {
             const response = await fetch(
@@ -27,13 +35,10 @@ export default function Submission({ params }: { params: { row: string } }) {
                 }
             );
             const jsonData = await response.json();
-            
             // update local db copy 
-            jsonData.forEach((row: any) => {
-                //console.log(row);
-                addRow(row);
+            jsonData.forEach((row: any, index: number) => {
+                addRow(row, index);
             })
-
             setData(jsonData);
             setVote(jsonData[row].votes[0]) //FIXME: should be dynamic based on user's column
         };
@@ -48,11 +53,12 @@ export default function Submission({ params }: { params: { row: string } }) {
         setVote(data[newRow].votes[0]) //FIXME: should be dynamic based on user's column
     };
 
-    async function addRow(row: any) {
+    async function addRow(row: any, index: number) {
         try {
           const newData = row;
           await db.rows.add({
             id: newData.id,
+            row: index + 1,
             title: newData.title,
             artists: newData.artists,
             listenLink: newData.listenLink,
@@ -82,19 +88,16 @@ export default function Submission({ params }: { params: { row: string } }) {
         try {
             //grab current votes
             const currRow = await db.rows.get(id);
-            //console.log(currRow);
-
             //adjust vote
             const newVotes: number[] = currRow!.votes; //FIXME: handle potential error instead of unwrapping
-            newVotes[0] = parseInt(vote);
-
+            newVotes[0] = parseInt(vote); //FIXME: should be dynamic based on user's column
             //update votes with new vote
             const newData = currRow!;
             await db.rows.update(newData.id,{
                 votes: newVotes
             });
-
             //console.log(`Updated votes for id ${id}!`);
+            //success! send out a signal to update everyone else's local db.
           } catch (error) {
             console.log(`Failed to update vote for ${row}: ${error}`);
           }
@@ -118,6 +121,12 @@ export default function Submission({ params }: { params: { row: string } }) {
         setVote(vote);
     };
 
+    //if(rows === undefined) {
+    //    return <div>Loading rows...</div>;
+    //} else if (rows![row-1] === undefined) {
+    //    return <div>Invalid row number</div>;
+    //}
+
     return (
         <div>
             <div className="flex justify-between items-center p-15 w-full h-full">
@@ -128,8 +137,8 @@ export default function Submission({ params }: { params: { row: string } }) {
 
             <div className="flex justify-center items-center p-15 w-full h-full">
                 <div className="flex flex-col items-center p-15 space-y-15">
-                    {data ? <h1 className="text-4xl font-extrabold pb-5">{data[row - 1].title}</h1> : "..."}
-                    {data ? <h1 className="text-4xl font-light pb-5">{data[row - 1].artists}</h1> : "..."}
+                    {data ? <h1 className="text-4xl font-extrabold pb-5">{rows![row - 1].title}</h1> : "..."}
+                    {data ? <h1 className="text-4xl font-light pb-5">{rows![row - 1].artists}</h1> : "..."}
                     {/*data ? data[parseInt(row) + 1].votes.map((vote: any, index: number) => (<p key={index}>{vote + '\n'}</p>)): "..."*/}
 
                     <div className="flex">
