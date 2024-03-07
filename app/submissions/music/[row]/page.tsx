@@ -5,6 +5,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 
 export default function Submission({ params }: { params: { row: string } }) {
 
+    //FIXME: determine based on logged in account
+    const col = 1;
+    const colLetter = 'H';
+
+    const [loading, setLoading] = useState(true);
+
     const rowsQuery = useLiveQuery(() => db.rows.toArray()); //live query of dexie db, rows will updates sorted
 
     const [row, setRow] = useState<number>(parseInt(params.row));
@@ -12,17 +18,13 @@ export default function Submission({ params }: { params: { row: string } }) {
 
     const [vote, setVote] = useState('');
 
-    //this sucks but it works
+    //sort rows by row number every time rowsQuery updates
     useEffect(() => {
         setRows(rowsQuery?.sort(function(a, b){ var x = a["row"]; var y = b["row"]; return ((x < y) ? -1 : ((x > y) ? 1 : 0));}));
-        //console.log(rows);
-        //setVote(rows![row].votes[0]);
     }, [rowsQuery]);
 
     //fetch data only on mount
     useEffect(() => {
-        //db.rows.clear();
-        //fetch entire sheet on mount
         const fetchData = async () => {
             const response = await fetch(
                 `http://localhost:3000/api/submissions/music`,
@@ -34,13 +36,13 @@ export default function Submission({ params }: { params: { row: string } }) {
                     },
                 }
             );
-            const jsonData = await response.json();
+            const data = await response.json();
+            setVote(data[row - 1].votes[col]);
             // update local db copy 
-            jsonData.forEach((row: any, index: number) => {
-                addRow(row, index);
-            })
-            //setData(jsonData);
-            setVote(jsonData[row - 1].votes[0]) //FIXME: should be dynamic based on user's column
+            for (const [i, value] of data.entries()) {
+                await addRow(value, i);
+            }
+            setLoading(false);
         };
         fetchData();
     }, []);
@@ -50,20 +52,15 @@ export default function Submission({ params }: { params: { row: string } }) {
             return;
         }
         setRow(newRow);
-        setVote(rows[newRow - 1].votes[0]) //FIXME: should be dynamic based on user's column
+        setVote(rows[newRow - 1].votes[col])
     };
 
     async function addRow(row: any, index: number) {
         try {
           const newData = row;
           await db.rows.add({
-            id: newData.id,
+            ...newData,
             row: index + 1,
-            title: newData.title,
-            artists: newData.artists,
-            listenLink: newData.listenLink,
-            infoLink: newData.infoLink,
-            votes: newData.votes
           });
           //console.log(`Added row with data ${newData} to the database!`);
         } catch (error) {
@@ -71,11 +68,7 @@ export default function Submission({ params }: { params: { row: string } }) {
           try {
             const newData = row;
             await db.rows.update(newData.id,{
-              title: newData.title,
-              artists: newData.artists,
-              listenLink: newData.listenLink,
-              infoLink: newData.infoLink,
-              votes: newData.votes
+                ...newData,
             });
             //console.log(`Updated row with data ${newData} to the database!`);
           } catch (error) {
@@ -90,26 +83,29 @@ export default function Submission({ params }: { params: { row: string } }) {
             const currRow = await db.rows.get(id);
             //adjust vote
             const newVotes: number[] = currRow!.votes; //FIXME: handle potential error instead of unwrapping
-            newVotes[0] = parseInt(vote); //FIXME: should be dynamic based on user's column
+            newVotes[col] = parseInt(vote);
             //update votes with new vote
             const newData = currRow!;
             await db.rows.update(newData.id,{
                 votes: newVotes
             });
             //console.log(`Updated votes for id ${id}!`);
-            //success! send out a signal to update everyone else's local db.
+            //success! reflect change in the UI and also send out a signal to update everyone else's local db.
+            setVote(vote);
           } catch (error) {
             console.log(`Failed to update vote for ${row}: ${error}`);
           }
     }
 
     const handleSubmit = async (vote:string) => {
+        setVote(vote); //careful, this only reflects value in UI, not in the db (yet)
+
         const body = {
             vote,
-            col: 'G',
+            col: colLetter,
             row: `${row}`
         }
-        const response = fetch('/api/submissions/music', {
+        const response = await fetch('/api/submissions/music', {
             method: 'POST',
             body: JSON.stringify(body),
             headers: {
@@ -117,11 +113,13 @@ export default function Submission({ params }: { params: { row: string } }) {
                 'Content-Type': 'application/json'
             }
         });
-        updateVote(vote, `${rows[row - 1].id}`);
-        setVote(vote);
+
+        if(response.status === 200) {
+            updateVote(vote, `${rows[row - 1].id}`);
+        }
     };
 
-    if(rows === undefined || rows![row-1] === undefined) {
+    if(loading) {
         return <div>Loading rows...</div>;
     }
 
@@ -137,7 +135,7 @@ export default function Submission({ params }: { params: { row: string } }) {
                 <div className="flex flex-col items-center p-15 space-y-15">
                     {rows ? <h1 className="text-4xl font-extrabold pb-5">{rows![row - 1].title}</h1> : "..."}
                     {rows ? <h1 className="text-4xl font-light pb-5">{rows![row - 1].artists}</h1> : "..."}
-                    {/*data ? data[parseInt(row) + 1].votes.map((vote: any, index: number) => (<p key={index}>{vote + '\n'}</p>)): "..."*/}
+                    {rows ? rows![row - 1].votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."}
 
                     <div className="flex">
                         <button className={`btn text-4xl size-24 px-5 mr-10 ${vote === '1' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('1')}>1</button>
