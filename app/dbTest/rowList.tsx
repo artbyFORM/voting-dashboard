@@ -6,7 +6,9 @@ export function RowList() {
     const rows = useLiveQuery(() => db.rows.toArray());
   
     return (
-      <ul>
+    <div>
+      <button className="btn ml-10" onClick={() => db.rows.clear()}>CLEAR DATABASE</button>
+      <ul className="mt-5 ml-10">
         {rows?.sort(function(a, b) 
             {
             var x = a["row"]; var y = b["row"];
@@ -19,5 +21,6 @@ export function RowList() {
             ))
         }
       </ul>
+    </div>
     );
 }

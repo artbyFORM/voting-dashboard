@@ -5,18 +5,18 @@ import { useLiveQuery } from 'dexie-react-hooks';
 
 export default function Submission({ params }: { params: { row: string } }) {
 
-    const rowsQuery = useLiveQuery(() => db.rows.toArray());
+    const rowsQuery = useLiveQuery(() => db.rows.toArray()); //live query of dexie db, rows will updates sorted
 
     const [row, setRow] = useState<number>(parseInt(params.row));
     const [rows, setRows] = useState<any>([]); //rows should always reflect the local dexie db
 
-    const [data, setData] = useState<any>(null);
     const [vote, setVote] = useState('');
 
     //this sucks but it works
     useEffect(() => {
-        if (rowsQuery)
-            setRows(rowsQuery.sort(function(a, b){ var x = a["row"]; var y = b["row"]; return ((x < y) ? -1 : ((x > y) ? 1 : 0));}));
+        setRows(rowsQuery?.sort(function(a, b){ var x = a["row"]; var y = b["row"]; return ((x < y) ? -1 : ((x > y) ? 1 : 0));}));
+        //console.log(rows);
+        //setVote(rows![row].votes[0]);
     }, [rowsQuery]);
 
     //fetch data only on mount
@@ -39,8 +39,8 @@ export default function Submission({ params }: { params: { row: string } }) {
             jsonData.forEach((row: any, index: number) => {
                 addRow(row, index);
             })
-            setData(jsonData);
-            setVote(jsonData[row].votes[0]) //FIXME: should be dynamic based on user's column
+            //setData(jsonData);
+            setVote(jsonData[row - 1].votes[0]) //FIXME: should be dynamic based on user's column
         };
         fetchData();
     }, []);
@@ -50,7 +50,7 @@ export default function Submission({ params }: { params: { row: string } }) {
             return;
         }
         setRow(newRow);
-        setVote(data[newRow].votes[0]) //FIXME: should be dynamic based on user's column
+        setVote(rows[newRow - 1].votes[0]) //FIXME: should be dynamic based on user's column
     };
 
     async function addRow(row: any, index: number) {
@@ -117,28 +117,26 @@ export default function Submission({ params }: { params: { row: string } }) {
                 'Content-Type': 'application/json'
             }
         });
-        updateVote(vote, `${data[row - 1].id}`);
+        updateVote(vote, `${rows[row - 1].id}`);
         setVote(vote);
     };
 
-    //if(rows === undefined) {
-    //    return <div>Loading rows...</div>;
-    //} else if (rows![row-1] === undefined) {
-    //    return <div>Invalid row number</div>;
-    //}
+    if(rows === undefined || rows![row-1] === undefined) {
+        return <div>Loading rows...</div>;
+    }
 
     return (
         <div>
             <div className="flex justify-between items-center p-15 w-full h-full">
                 <button className="btn ml-10" onClick={() => changeRow(row - 1)}>BACK</button>
-                <p>{row}</p>
+                <p>{`${row}/${rows.length}`}</p>
                 <button className="btn ml-10" onClick={() => changeRow(row + 1)}>NEXT</button>
             </div>
 
             <div className="flex justify-center items-center p-15 w-full h-full">
                 <div className="flex flex-col items-center p-15 space-y-15">
-                    {data ? <h1 className="text-4xl font-extrabold pb-5">{rows![row - 1].title}</h1> : "..."}
-                    {data ? <h1 className="text-4xl font-light pb-5">{rows![row - 1].artists}</h1> : "..."}
+                    {rows ? <h1 className="text-4xl font-extrabold pb-5">{rows![row - 1].title}</h1> : "..."}
+                    {rows ? <h1 className="text-4xl font-light pb-5">{rows![row - 1].artists}</h1> : "..."}
                     {/*data ? data[parseInt(row) + 1].votes.map((vote: any, index: number) => (<p key={index}>{vote + '\n'}</p>)): "..."*/}
 
                     <div className="flex">
