@@ -20,8 +20,12 @@ export default function Submission({ params }: { params: { row: string } }) {
 
     //sort rows by row number every time rowsQuery updates
     useEffect(() => {
-        setRows(rowsQuery?.sort(function(a, b){ var x = a["row"]; var y = b["row"]; return ((x < y) ? -1 : ((x > y) ? 1 : 0));}));
+        if (rowsQuery) {
+            const sortedRows = [...rowsQuery].sort((a, b) => a.row - b.row);
+            setRows(sortedRows);
+        }
     }, [rowsQuery]);
+    
 
     //fetch data only on mount
     useEffect(() => {
@@ -48,9 +52,10 @@ export default function Submission({ params }: { params: { row: string } }) {
     }, []);
 
     const changeRow = (newRow:number) => {
-        if(newRow < 1) { return; }
-        setRow(newRow);
+        //if(newRow < 1) { return; }
+        //setRow(newRow);
         setVote(rows[newRow - 1].votes[col])
+        setRow(newRow);
     };
 
     async function addRow(row: any, index: number) {
@@ -93,9 +98,9 @@ export default function Submission({ params }: { params: { row: string } }) {
             console.log(`Failed to update vote for ${row}: ${error}`);
           }
     }
+    
 
     const handleSubmit = async (vote: string) => {
-        // Create a new AbortController instance for each submit
         const abortController = new AbortController();
         const signal = abortController.signal;
     
@@ -113,29 +118,26 @@ export default function Submission({ params }: { params: { row: string } }) {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                signal, // Associate the AbortController signal with the fetch request
+                signal
             });
     
             if (response.status === 200) {
-                // Update the vote in the local database
+                // update vote in local db
                 await updateVote(vote, `${rows[row - 1].id}`);
-                
             }
         } catch (error) {
-            // Check if the error is due to the fetch being aborted
-            if (error.name === 'AbortError') {
+            // check if the error is due to the fetch being aborted
+            if ((error as Error).name === 'AbortError') {
                 console.log('Fetch aborted:');
             } else {
                 console.log(`Failed to update vote for ${row}: ${error}`);
             }
         } finally {
-            // Clean up the AbortController after the fetch is completed or aborted
             abortController.abort();
             setVote(vote);
         }
     };
     
-
     if(loading) {
         return <div>Loading rows...</div>;
     }
@@ -143,9 +145,9 @@ export default function Submission({ params }: { params: { row: string } }) {
     return (
         <div>
             <div className="flex justify-between items-center p-15 w-full h-full">
-                <button className="btn ml-10" onClick={() => changeRow(row - 1)}>BACK</button>
+                <button className="btn ml-10" onClick={() => changeRow(row - 1)} disabled={row === 1}>BACK</button>
                 <p>{`${row}/${rows.length}`}</p>
-                <button className="btn ml-10" onClick={() => changeRow(row + 1)}>NEXT</button>
+                <button className="btn ml-10" onClick={() => changeRow(row + 1)} disabled={row === rows.size}>NEXT</button>
             </div>
 
             <div className="flex justify-center items-center p-15 w-full h-full">
@@ -155,9 +157,9 @@ export default function Submission({ params }: { params: { row: string } }) {
                     {/*rows ? rows![row - 1].votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."*/}
 
                     <div className="flex">
-                        <button className={`btn text-4xl size-24 px-5 mr-10 ${vote === '1' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('1')}>1</button>
-                        <button className={`btn text-4xl size-24 px-5 mr-10 ${vote === '2' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('2')}>2</button>
-                        <button className={`btn text-4xl size-24 px-5 mr-10 ${vote === '3' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('3')}>3</button>
+                        <button className={`btn text-4xl size-24 px-5 mr-10 ${vote == '1' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('1')}>1</button>
+                        <button className={`btn text-4xl size-24 px-5 mr-10 ${vote == '2' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('2')}>2</button>
+                        <button className={`btn text-4xl size-24 px-5 mr-10 ${vote == '3' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('3')}>3</button>
                     </div>
                 </div>
             </div>
