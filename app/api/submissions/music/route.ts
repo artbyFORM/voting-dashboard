@@ -1,35 +1,49 @@
 import { NextResponse } from "next/server";
 import { google } from 'googleapis';
 
-export async function GET(req:any){
-    const url = new URL(req.url);
-    const row = url.searchParams.get('row');
-    //validate search params, account for "all"
+interface VoteData {
+    id: string;
+    title: string;
+    artists: string;
+    listenLink: string;
+    infoLink: string;
+    votes: number[];
+}
 
+export async function GET(req:any){
     const auth = await google.auth.getClient({scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']});
     const sheets = google.sheets({version: 'v4', auth});
+    const range = `A${2}:P${1000}`; // entire sheet, maybe make max size dynamic?
 
-    const parsedRow = parseInt(row!) + 1; // +1 is because the first row is the header
-    const infoRange = `A${parsedRow}:E${parsedRow}`;
-    const voteRange = `G${parsedRow}:P${parsedRow}`; //FIXME: hardcoded, needs to calculate for arbitrary number of voters
-
-    const infoResponse = await sheets.spreadsheets.values.get({
+    const response = await sheets.spreadsheets.values.get({
         spreadsheetId: process.env.SHEET_ID,
-        range: infoRange
+        range
     });
 
-    const voterResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.SHEET_ID,
-        range: voteRange
+    const responseArr = response.data.values as Array<any>;
+    const objs: VoteData[] = responseArr.map(([id, title, artists, listenLink, infoLink, , ...votes]) => {
+        const votesArray = Array<number>(10).fill(0); //FIXME: make length dynamic based on how many voters we have
+        votes.forEach((vote: string, index: number) => {
+            if (vote !== "") {
+                votesArray[index] = parseInt(vote);
+            }
+        });
+        return {
+            id,
+            title,
+            artists,
+            listenLink,
+            infoLink,
+            votes: votesArray as number[]
+        };
     });
 
-    console.log(infoResponse.data);
-
-    const [id, title, artists, listenLink, fullInfoLink] = infoResponse.data.values?.[0] ?? [];
-    const votes = voterResponse.data.values ?? [];
-
-    const data = { id, artists, title, listenLink, fullInfoLink, votes };
-    return NextResponse.json(data);
+    //console.log("Sheet Fetched!")
+    //console.log(objs)
+    
+    //example: find by row in sheet: console.log(objs[0])
+    //example: find by ID: console.log(objs.find(x => x.id === '264'))
+    return NextResponse.json(objs);
 }
 
 export async function POST(req: any, res: any){
