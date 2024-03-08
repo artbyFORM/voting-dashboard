@@ -7,7 +7,7 @@ interface VoteData {
     artists: string;
     listenLink: string;
     infoLink: string;
-    votes: [number, number, number, number];
+    votes: number[];
 }
 
 export async function GET(req:any){
@@ -21,18 +21,26 @@ export async function GET(req:any){
     });
 
     const responseArr = response.data.values as Array<any>;
-    const objs: VoteData[] = responseArr.map(([id, title, artists, listenLink, infoLink, , ...votes]) => ({
-        id,
-        title,
-        artists,
-        listenLink,
-        infoLink,
-        votes
-    }));
+    const objs: VoteData[] = responseArr.map(([id, title, artists, listenLink, infoLink, , ...votes]) => {
+        const votesArray = Array<number>(10).fill(0); //FIXME: make length dynamic based on how many voters we have
+        votes.forEach((vote: string, index: number) => {
+            if (vote !== "") {
+                votesArray[index] = parseInt(vote);
+            }
+        });
+        return {
+            id,
+            title,
+            artists,
+            listenLink,
+            infoLink,
+            votes: votesArray as number[]
+        };
+    });
 
-    console.log("Sheet Fetched!")
-
+    //console.log("Sheet Fetched!")
     //console.log(objs)
+    
     //example: find by row in sheet: console.log(objs[0])
     //example: find by ID: console.log(objs.find(x => x.id === '264'))
     return NextResponse.json(objs);

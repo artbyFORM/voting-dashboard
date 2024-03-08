@@ -52,8 +52,6 @@ export default function Submission({ params }: { params: { row: string } }) {
     }, []);
 
     const changeRow = (newRow:number) => {
-        //if(newRow < 1) { return; }
-        //setRow(newRow);
         setVote(rows[newRow - 1].votes[col])
         setRow(newRow);
     };
@@ -72,7 +70,7 @@ export default function Submission({ params }: { params: { row: string } }) {
             await db.rows.update(newData.id,{
                 ...newData,
             });
-            //console.log(`Updated row with data ${newData} to the database!`);
+            console.log(`Updated row with data ${JSON.stringify(newData)} to the database!`);
           } catch (error) {
             console.log(`Failed to add ${row}: ${error}`);
           }
@@ -142,18 +140,20 @@ export default function Submission({ params }: { params: { row: string } }) {
         return <div>Loading rows...</div>;
     }
 
+    const currRowData = rows![row - 1];
+
     return (
         <div>
             <div className="flex justify-between items-center p-15 w-full h-full">
                 <button className="btn ml-10" onClick={() => changeRow(row - 1)} disabled={row === 1}>BACK</button>
                 <p>{`${row}/${rows.length}`}</p>
-                <button className="btn ml-10" onClick={() => changeRow(row + 1)} disabled={row === rows.size}>NEXT</button>
+                <button className="btn ml-10" onClick={() => changeRow(row + 1)} disabled={row === rows.length}>NEXT</button>
             </div>
 
             <div className="flex justify-center items-center p-15 w-full h-full">
                 <div className="flex flex-col items-center p-15 space-y-15">
-                    {rows ? <h1 className="text-4xl font-extrabold pb-5">{rows![row - 1].title}</h1> : "..."}
-                    {rows ? <h1 className="text-4xl font-light pb-5">{rows![row - 1].artists}</h1> : "..."}
+                    {rows ? <h1 className="text-4xl font-extrabold pb-5">{currRowData.title}</h1> : "..."}
+                    {rows ? <h1 className="text-4xl font-light pb-5">{currRowData.artists}</h1> : "..."}
                     {/*rows ? rows![row - 1].votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."*/}
 
                     <div className="flex">
