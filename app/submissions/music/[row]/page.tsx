@@ -165,7 +165,7 @@ export default function Submission({ params }: { params: { row: string } }) {
             <div className="flex justify-between items-center p-15 w-full h-full">
                 <button className="btn ml-10" onClick={() => changeRow(row - 1)} disabled={row === 1}>BACK</button>
                 <p>{`${row}/${rows.length}`}</p>
-                <button className="btn ml-10" onClick={() => changeRow(row + 1)} disabled={row === rows.length}>NEXT</button>
+                <button className="btn mr-10" onClick={() => changeRow(row + 1)} disabled={row === rows.length}>NEXT</button>
             </div>
 
             <div className="flex justify-center items-center p-15 w-full h-full">
