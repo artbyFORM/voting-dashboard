@@ -18,6 +18,7 @@ export default function Submission({ params }: { params: { row: string } }) {
 
     const [vote, setVote] = useState('');
 
+    //handle keyboard input
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent) => {
             if (event.key === '1' || event.key === '2' || event.key === '3') {
@@ -39,9 +40,8 @@ export default function Submission({ params }: { params: { row: string } }) {
             setRows(sortedRows);
         }
     }, [rowsQuery]);
-    
 
-    //fetch data only on mount
+    //fetch data from sheet (only on mount)
     useEffect(() => {
         const fetchData = async () => {
             const response = await fetch(
@@ -111,7 +111,6 @@ export default function Submission({ params }: { params: { row: string } }) {
           }
     }
     
-
     const handleSubmit = async (vote: string) => {
         const abortController = new AbortController();
         const signal = abortController.signal;
@@ -151,7 +150,12 @@ export default function Submission({ params }: { params: { row: string } }) {
     };
     
     if(loading) {
-        return <div>Loading rows...</div>;
+        return <div className='flex justify-center items-center w-full h-20'>
+                    <div className='flex flex-col justify-center items-center space-y-5'>
+                        <span className="loading loading-dots loading-lg pb-15"></span>
+                        Loading submissions...
+                    </div>
+               </div>;
     }
 
     const currRowData = rows![row - 1];
