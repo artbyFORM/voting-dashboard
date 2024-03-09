@@ -18,6 +18,20 @@ export default function Submission({ params }: { params: { row: string } }) {
 
     const [vote, setVote] = useState('');
 
+    useEffect(() => {
+        const handleKeyPress = (event: KeyboardEvent) => {
+            if (event.key === '1' || event.key === '2' || event.key === '3') {
+                handleSubmit(event.key);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyPress);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyPress);
+        };
+    });
+
     //sort rows by row number every time rowsQuery updates
     useEffect(() => {
         if (rowsQuery) {
@@ -154,7 +168,7 @@ export default function Submission({ params }: { params: { row: string } }) {
                 <div className="flex flex-col items-center p-15 space-y-15">
                     {rows ? <h1 className="text-4xl font-extrabold pb-5">{currRowData.title}</h1> : "..."}
                     {rows ? <h1 className="text-4xl font-light pb-5">{currRowData.artists}</h1> : "..."}
-                    {/*rows ? rows![row - 1].votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."*/}
+                    {/*rows ? currRowData.votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."*/}
 
                     <div className="flex">
                         <button className={`btn text-4xl size-24 px-5 mr-10 ${vote == '1' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('1')}>1</button>
