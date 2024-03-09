@@ -18,6 +18,21 @@ export default function Submission({ params }: { params: { row: string } }) {
 
     const [vote, setVote] = useState('');
 
+    //handle keyboard input
+    useEffect(() => {
+        const handleKeyPress = (event: KeyboardEvent) => {
+            if (event.key === '1' || event.key === '2' || event.key === '3') {
+                handleSubmit(event.key);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyPress);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyPress);
+        };
+    });
+
     //sort rows by row number every time rowsQuery updates
     useEffect(() => {
         if (rowsQuery) {
@@ -25,9 +40,8 @@ export default function Submission({ params }: { params: { row: string } }) {
             setRows(sortedRows);
         }
     }, [rowsQuery]);
-    
 
-    //fetch data only on mount
+    //fetch data from sheet (only on mount)
     useEffect(() => {
         const fetchData = async () => {
             const response = await fetch(
@@ -97,7 +111,6 @@ export default function Submission({ params }: { params: { row: string } }) {
           }
     }
     
-
     const handleSubmit = async (vote: string) => {
         const abortController = new AbortController();
         const signal = abortController.signal;
@@ -137,7 +150,12 @@ export default function Submission({ params }: { params: { row: string } }) {
     };
     
     if(loading) {
-        return <div>Loading rows...</div>;
+        return <div className='flex justify-center items-center w-full h-20'>
+                    <div className='flex flex-col justify-center items-center space-y-5'>
+                        <span className="loading loading-dots loading-lg pb-15"></span>
+                        Loading submissions...
+                    </div>
+               </div>;
     }
 
     const currRowData = rows![row - 1];
@@ -147,14 +165,14 @@ export default function Submission({ params }: { params: { row: string } }) {
             <div className="flex justify-between items-center p-15 w-full h-full">
                 <button className="btn ml-10" onClick={() => changeRow(row - 1)} disabled={row === 1}>BACK</button>
                 <p>{`${row}/${rows.length}`}</p>
-                <button className="btn ml-10" onClick={() => changeRow(row + 1)} disabled={row === rows.length}>NEXT</button>
+                <button className="btn mr-10" onClick={() => changeRow(row + 1)} disabled={row === rows.length}>NEXT</button>
             </div>
 
             <div className="flex justify-center items-center p-15 w-full h-full">
                 <div className="flex flex-col items-center p-15 space-y-15">
                     {rows ? <h1 className="text-4xl font-extrabold pb-5">{currRowData.title}</h1> : "..."}
                     {rows ? <h1 className="text-4xl font-light pb-5">{currRowData.artists}</h1> : "..."}
-                    {/*rows ? rows![row - 1].votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."*/}
+                    {/*rows ? currRowData.votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."*/}
 
                     <div className="flex">
                         <button className={`btn text-4xl size-24 px-5 mr-10 ${vote == '1' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('1')}>1</button>
