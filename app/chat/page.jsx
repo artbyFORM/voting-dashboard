@@ -10,6 +10,7 @@ const Index = () => {
   useEffect(() => {
     // Listen for incoming messages
     socket.on('vote message', (message) => {
+      message = `Vote: ${JSON.stringify(message)}`;
       setMessages((prevMessages) => [...prevMessages, message]);
     });
   }, []);

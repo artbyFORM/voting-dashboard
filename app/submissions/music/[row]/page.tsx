@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { db } from "@/db/db.model";
 import { useLiveQuery } from 'dexie-react-hooks';
+import io from 'socket.io-client';
+const socket = io('http://localhost:3001', { transports : ['websocket'] }); 
 
 export default function Submission({ params }: { params: { row: string } }) {
 
@@ -17,6 +19,14 @@ export default function Submission({ params }: { params: { row: string } }) {
     const [rows, setRows] = useState<any>([]); //rows should always reflect the local dexie db
 
     const [vote, setVote] = useState('');
+
+    useEffect(() => {
+        // Listen for incoming messages
+        socket.on('vote message', (message) => {
+          //console.log('Received vote update signal:', message);
+          updateVoteFromOther(message.vote, message.id, message.col);
+        });
+      }, []);
 
     //handle keyboard input
     useEffect(() => {
@@ -106,6 +116,31 @@ export default function Submission({ params }: { params: { row: string } }) {
             //console.log(`Updated votes for id ${id}!`);
             //success! reflect change in the UI and also send out a signal to update everyone else's local db.
             setVote(vote);
+            const voteSignal = {    
+                id: id,
+                col: col,
+                vote: vote
+            };
+            socket.emit('vote message', voteSignal);
+          } catch (error) {
+            console.log(`Failed to update vote for ${row}: ${error}`);
+          }
+    }
+
+    async function updateVoteFromOther(vote: string, id: string, col: number) {
+        try {
+            //grab current votes
+            const currRow = await db.rows.get(id);
+            //adjust vote
+            const newVotes: number[] = currRow!.votes; //FIXME: handle potential error instead of unwrapping
+            newVotes[col] = parseInt(vote);
+            //update votes with new vote
+            const newData = currRow!;
+            await db.rows.update(newData.id,{
+                votes: newVotes
+            });
+            //console.log(`Updated votes for id ${id}!`);
+            //success! no need to reflect changes on client since this is a signal from another client
           } catch (error) {
             console.log(`Failed to update vote for ${row}: ${error}`);
           }
