@@ -7,9 +7,8 @@ const socket = io('http://localhost:3001', { transports : ['websocket'] });
 
 export default function Submission({ params }: { params: { row: string } }) {
 
-    //FIXME: determine based on logged in account
-    const col = 1;
-    const colLetter = 'H';
+    const [colNumber, setColNumber] = useState(-1);
+    const [colLetter, setColLetter] = useState('');
 
     const [loading, setLoading] = useState(true);
 
@@ -51,8 +50,18 @@ export default function Submission({ params }: { params: { row: string } }) {
         }
     }, [rowsQuery]);
 
-    //fetch data from sheet (only on mount)
+    //fetch column info from local storage and fetch data from sheet (only on mount)
     useEffect(() => {
+        const getUserInfoFromLocalStorage = () => {
+            const storedUserInfo = localStorage.getItem('userInfo');
+            return storedUserInfo ? JSON.parse(storedUserInfo) : null;
+        };
+
+        const colNum = getUserInfoFromLocalStorage().colNumber;
+        const colLet = getUserInfoFromLocalStorage().colLetter;
+        setColNumber(colNum);
+        setColLetter(colLet);
+
         const fetchData = async () => {
             const response = await fetch(
                 `http://localhost:3000/api/submissions/music`,
@@ -65,7 +74,7 @@ export default function Submission({ params }: { params: { row: string } }) {
                 }
             );
             const data = await response.json();
-            setVote(data[row - 1].votes[col]);
+            setVote(data[row - 1].votes[colNum]);
             // update local db copy 
             for (const [i, value] of data.entries()) {
                 await addRow(value, i);
@@ -76,7 +85,7 @@ export default function Submission({ params }: { params: { row: string } }) {
     }, []);
 
     const changeRow = (newRow:number) => {
-        setVote(rows[newRow - 1].votes[col])
+        setVote(rows[newRow - 1].votes[colNumber])
         setRow(newRow);
     };
 
@@ -107,7 +116,7 @@ export default function Submission({ params }: { params: { row: string } }) {
             const currRow = await db.rows.get(id);
             //adjust vote
             const newVotes: number[] = currRow!.votes; //FIXME: handle potential error instead of unwrapping
-            newVotes[col] = parseInt(vote);
+            newVotes[colNumber] = parseInt(vote);
             //update votes with new vote
             const newData = currRow!;
             await db.rows.update(newData.id,{
@@ -209,13 +218,16 @@ export default function Submission({ params }: { params: { row: string } }) {
                     {rows ? <h1 className="text-4xl font-light pb-5">{currRowData.artists}</h1> : "..."}
                     {/*rows ? currRowData.votes.map((vote: any, index: number) => (<p className="text-xl font-light pb-5 justify-center" key={index}>{vote + '\n'}</p>)): "..."*/}
 
-                    <div className="flex">
+                    <div className="flex pb-5">
                         <button className={`btn text-4xl size-24 px-5 mr-10 ${vote == '1' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('1')}>1</button>
                         <button className={`btn text-4xl size-24 px-5 mr-10 ${vote == '2' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('2')}>2</button>
                         <button className={`btn text-4xl size-24 px-5 mr-10 ${vote == '3' ? 'btn-primary' : 'btn-red'}`} onClick={() => handleSubmit('3')}>3</button>
                     </div>
+
+                    <p>You are voting on column {colLetter}</p>
                 </div>
             </div>
+
         </div>
     );
 }
