@@ -127,7 +127,7 @@ export default function Submission({ params }: { params: { row: string } }) {
             setVote(vote);
             const voteSignal = {    
                 id: id,
-                col: col,
+                col: colNumber,
                 vote: vote
             };
             socket.emit('vote message', voteSignal);
